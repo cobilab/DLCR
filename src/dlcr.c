@@ -17,46 +17,33 @@
 
 Parameters *P; // FOR THREAD SHARING
 
-char *fgets_backwards( char *str, int size, FILE *fp ) {
-    /* Stop if we're at the beginning of the file */
-    if( ftell(fp) == 0 ) {
-        return NULL;
+//////////////////////////////////////////////////////////////////////////////
+// - - - - - - - - - - - - R E A D   B A C K W A R D S - - - - - - - - - - - -
+
+char *fgets_backwards(char *str, int size, FILE *F){
+  int i;
+  if(ftell(F) == 0) return NULL;
+  for(i = 0; ftell(F) != 0 && i < size; i++){
+    fseek(F, -1, SEEK_CUR);
+    str[i] = (char)fgetc(F);
+    if(str[i] == '\n' && i != 0) break;
+    fseek(F, -1, SEEK_CUR);
     }
+  str[i] = '\0';
+  return str;
+  }
 
-    int i;
-    /* Be sure not to overflow the string nor read past the start of the file */
-    for( i = 0; ftell(fp) != 0 && i < size; i++ ) {
-        /* Back up one character */
-        fseek(fp, -1, SEEK_CUR);
-        /* Read that character */
-        str[i] = (char)fgetc(fp);
+//////////////////////////////////////////////////////////////////////////////
+// - - - - - - - - - - - S I M P L E   R E V E R S E R - - - - - - - - - - - -
 
-        /* We have the whole line if we see a newline, except at the start.
-           This happens before we back up a character so the newline will
-           appear on the next line. */
-        if( str[i] == '\n' && i != 0 ) {
-            break;
-        }
-
-        /* Back up the character we read. */
-        fseek(fp, -1, SEEK_CUR);
+void reverse(char *start){
+  size_t len = strlen(start);
+  for(char *end = &start[len-1] ; start < end ; start++, end--){
+    char tmp = start[0];
+    start[0] = end[0];
+    end[0]   = tmp;
     }
-
-    /* Null terminate, overwriting the previous line's newline */
-    str[i] = '\0';
-
-    return str;
-}
-
-void reverse( char *start ) {
-    size_t len = strlen(start);
-
-    for( char *end = &start[len-1]; start < end; start++, end-- ) {
-        char tmp = start[0];
-        start[0] = end[0];
-        end[0] = tmp;
-    }
-}
+  }
 
 //////////////////////////////////////////////////////////////////////////////
 // - - - - - - - - - - - - - - C O M P R E S S O R - - - - - - - - - - - - - -
@@ -268,8 +255,9 @@ int32_t main(int argc, char *argv[]){
 
   P->force     = ArgsState  (DEFAULT_FORCE,   p, argc, "-F", "--force");
   P->verbose   = ArgsState  (DEFAULT_VERBOSE, p, argc, "-v", "--verbose");
-  P->threshold = ArgsDouble (0, p, argc, "-t", "--threshold");
-  P->window    = ArgsNum    (0, p, argc, "-w", "--window-size", 1, 999999999);
+  P->threshold = ArgsDouble (1.0,             p, argc, "-t", "--threshold");
+  P->weight    = ArgsDouble (0.025,           p, argc, "-w", "--weight");
+  P->ignore    = ArgsNum    (10, p, argc, "-i", "--ignore",     0, 999999999);
   P->region    = ArgsNum    (0, p, argc, "-r", "--region-size", 1, 999999999);
   P->level     = ArgsNum    (0, p, argc, "-l", "--level", MIN_LEVEL, MAX_LEVEL);
 
@@ -319,13 +307,14 @@ int32_t main(int argc, char *argv[]){
   // COMPRESSING ==============================================================
   //
 
-  if(P->verbose) fprintf(stderr, "==[ SPLITTING STREAMS ]=============\n");
+  if(P->verbose) fprintf(stderr, "Spliting and reversing streams ...\n");
 
   FILE *IN   = Fopen(P->filename,   "r");
   FILE *OUT1 = Fopen(".dlcr_1.dna", "w");
   FILE *OUT2 = Fopen(".dlcr_2.dna", "w");
 
   int sym;
+  uint64_t nValues = 0;
   while((sym = getc(IN)) != EOF){
     if(sym == '>') // HEADER FOUND!
       while((sym = fgetc(IN)) != EOF && sym != '\n')
@@ -333,6 +322,7 @@ int32_t main(int argc, char *argv[]){
     if(sym == EOF) break;
     if(sym == '\n') continue;
     fprintf(OUT1, "%c", sym);
+    ++nValues;
     }
   fclose(IN);
   fclose(OUT1);
@@ -350,46 +340,74 @@ int32_t main(int argc, char *argv[]){
   fclose(IN2);
   fclose(OUT2);
 
-  if(P->verbose) fprintf(stderr, "==[ DONE ]==========================\n");
+  if(P->verbose) fprintf(stderr, "Done!\n");
 
   // COMPRESSING ==============================================================
   // 
  
-  if(P->verbose) fprintf(stderr, "==[ COMPRESSING ]===================\n");
+  if(P->verbose) fprintf(stderr, "Compressing streams ...\n");
   CompressAction(T);
-  if(P->verbose) fprintf(stderr, "==[ DONE ]==========================\n");
+  if(P->verbose) fprintf(stderr, "Done!\n");
 
-  // GET THE MINIMUM OF LR AND RL DIRECTIONS ==================================
+  // GET THE MINIMUM OF LR & RL DIRECTIONS, FILTER & SEGMENT ==================
   //
-  //
+  
+  if(P->verbose) fprintf(stderr, "Filtering and segmenting ...\n");
+
   FILE *IN_LR = Fopen(".dlcr_1.inf", "r");
   FILE *IN_RL = Fopen(".dlcr_2.inf", "r");
-  
+
   fseek(IN_RL, 0, SEEK_END );
   char line_LR[1024];
   char line_RL[1024];
+  uint64_t idx = 0;
+  float smooth;
+  int region;
+  uint64_t initPos = 0;
+
   while(fgets_backwards(line_RL, 1024, IN_RL) != NULL){ 
     reverse(line_RL);	  
     if(!fgets(line_LR, 1024, IN_LR)){
       fprintf(stderr, "ERROR: information files have been changed!\n");
       exit(1);
       }
+
     float RL = atof(line_RL);
     float LR = atof(line_LR);
     float min = RL < LR ? RL : LR;
-    // fprintf(stdout, "RL > %.1lf ; LR > %.1lf ; MIN > %.1lf\n", LR, RL, min);
 
-    // TODO: FILTER HERE!
+    if(idx++ == 0){
+      smooth = min;
+      region = min < P->threshold ? 0 : 1;
+      }
+    else 
+      smooth = smooth - (P->weight * (smooth - min));
 
-    } 
+    if(smooth >= P->threshold){ // LOW REGION = 0, HIGH REGION = 1
+      if(region == 0){              
+        region = 1; 
+        if(idx - initPos > P->ignore)	
+          fprintf(stdout, "%"PRIu64":%"PRIu64"\n", initPos, idx);
+        }
+      }
+    else{ // val < threshold ====> LOW_REGION
+      if(region == 1){
+        region  = 0;
+        initPos = idx;
+        }
+      }
+    }
+
+  if(region == 0){
+    if(idx - initPos > P->ignore)	  
+    fprintf(stdout, "%"PRIu64":%"PRIu64"\n", initPos, idx);
+    }
+
   fclose(IN_LR);
   fclose(IN_RL);
-
-  // SEGMENTING ===============================================================
-  // 
-
-  // TODO:
   
+  if(P->verbose) fprintf(stderr, "Done!\n");
+
   // DISPLAYING ===============================================================
   //
 

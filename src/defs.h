@@ -48,10 +48,11 @@ typedef struct{
   U8       force;
   U8       level;
   double   threshold;
-  U64      window;
+  double   weight;
   U64      region;
   ModelPar *model;
   U64      size;
+  U64      ignore;
   U32      nModels;
   char     *filename;
   }

@@ -568,7 +568,7 @@ void PrintArgs(Parameters *P)
   fprintf(stderr, "Force mode ......................... %s\n", P->force == 0 ?
   "no" : "yes");
   fprintf(stderr, "Threshold .......................... %.3lf\n", P->threshold);
-  fprintf(stderr, "Window size ........................ %"PRIu64"\n", P->window);
+  fprintf(stderr, "Low-pass filter weight ............. %.3lf\n", P->weight);
   fprintf(stderr, "Region size ........................ %"PRIu64"\n", P->region);
   for(n = 0 ; n < P->nModels ; ++n){
     fprintf(stderr, "Target model %d:\n", n+1);
