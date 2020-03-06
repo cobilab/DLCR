@@ -6,11 +6,13 @@
 #include <ctype.h>
 #include <time.h>
 #include <pthread.h>
+
 #include "mem.h"
 #include "defs.h"
 #include "msg.h"
 #include "buffer.h"
 #include "levels.h"
+#include "cache.h"
 #include "common.h"
 #include "pmodels.h"
 #include "context.h"
@@ -171,10 +173,7 @@ void CompressTarget(Threads T){
   Free(MX);
   
   // for(n = 0 ; n < P->nModels ; ++n)
-  //   if(P->model[n].type == REFERENCE)
-  //     ResetCModelIdx(cModels[n]);
-  //   else
-  //     FreeCModel(cModels[n]);
+  //   FreeCModel(cModels[n]);
 
   for(n = 0 ; n < totModels ; ++n){
     Free(pModel[n]->freqs);
