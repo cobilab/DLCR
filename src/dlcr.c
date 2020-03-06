@@ -5,6 +5,7 @@
 #include <float.h>
 #include <ctype.h>
 #include <time.h>
+#include <pthread.h>
 #include "mem.h"
 #include "defs.h"
 #include "msg.h"
@@ -19,7 +20,10 @@ Parameters *P; // FOR THREAD SHARING
 //////////////////////////////////////////////////////////////////////////////
 // - - - - - - - - - - - - - - C O M P R E S S O R - - - - - - - - - - - - - -
 
-void Compress(uint8_t id){
+void CompressTarget(Threads T){
+
+  fprintf(stderr, "T: %u\n", T.id);	
+
   FILE        *Reader  = Fopen("forward", "r");
   char        *name    = concatenate("forward", ".co");
   FILE        *Writter = Fopen(name, "w");
@@ -163,6 +167,32 @@ void Compress(uint8_t id){
   fclose(Reader);
   }
 
+//////////////////////////////////////////////////////////////////////////////
+// - - - - - - - - - - - - F   T H R E A D I N G - - - - - - - - - - - - - - -
+
+void *CompressThread(void *Thr){
+  Threads *T = (Threads *) Thr;
+  CompressTarget(T[0]);
+  pthread_exit(NULL);
+  }
+
+//////////////////////////////////////////////////////////////////////////////
+// - - - - - - - - - - - C O M P R E S S O R   M A I N - - - - - - - - - - - -
+
+void CompressAction(Threads *T){
+
+  pthread_t t[2];
+  uint32_t n;
+
+  pthread_create(&(t[1]), NULL, CompressThread, (void *) &(T[0]));
+  pthread_create(&(t[2]), NULL, CompressThread, (void *) &(T[1]));
+    
+  pthread_join(t[1], NULL);
+  pthread_join(t[2], NULL);
+
+  return;
+  }
+
 
 //////////////////////////////////////////////////////////////////////////////
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -170,11 +200,13 @@ void Compress(uint8_t id){
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 int32_t main(int argc, char *argv[]){
-  char        **p = *&argv, **xargv, *xpl = NULL;
-  int32_t     n, xargc = 0;
-  uint32_t    k;
-  uint64_t    totalBytes, totalSize;
-  clock_t     stop = 0, start = clock();
+
+  char      **p = *&argv, **xargv, *xpl = NULL;
+  int32_t   n, xargc = 0;
+  uint32_t  k;
+  uint64_t  totalBytes, totalSize;
+  clock_t   stop = 0, start = clock();
+  Threads   *T;
 
   P = (Parameters *) Malloc(1 * sizeof(Parameters));
 
@@ -234,10 +266,23 @@ int32_t main(int argc, char *argv[]){
         P->model[k++] = ArgsUniqModel(xargv[n+1], 0);
     }
 
+  P->filename = argv[argc-1];
+
   if(P->verbose)
     PrintArgs(P);
 
-  Compress(1);
+  // THREADS SETTING
+  T = (Threads *) Calloc(2, sizeof(Threads));
+  T[0].id = 0;
+  T[1].id = 1;
+
+  if(P->verbose) fprintf(stderr, "==[ PROCESSING ]====================\n");
+
+  CompressAction(T);
+
+  if(P->verbose) fprintf(stderr, "==[ DONE ]==========================\n");
+
+  // TODO: FILTERING AND SEGMENTING
 
   stop = clock();
   fprintf(stdout, "Spent %g sec.\n", ((double)(stop-start))/CLOCKS_PER_SEC);

@@ -53,8 +53,14 @@ typedef struct{
   ModelPar *model;
   U64      size;
   U32      nModels;
+  char     *filename;
   }
 Parameters;
+
+typedef struct{
+  uint32_t id;
+  }
+Threads;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
