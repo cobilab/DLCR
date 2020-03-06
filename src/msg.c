@@ -4,7 +4,8 @@
 
 void ModelsExplanation(void){
   fprintf(stderr,
-  "      -m [NB_C]:[NB_D]:[NB_I]:[NB_H]:[NB_G]/[NB_S]:[NB_E]:[NB_A]       \n"
+  "                                                                        \n"		  
+  "      -m [NB_C]:[NB_D]:[NB_I]:[NB_H]:[NB_G]/[NB_S]:[NB_E]:[NB_A]        \n"
   "           Template of a target context model.                          \n"
   "           Parameters:                                                  \n"
   "           [NB_C]: (integer [1;20]) order size of the regular context   \n"
@@ -102,6 +103,9 @@ void PrintMenuCompression(void){
   "           Region size to ignore while updating the models.             \n"
   "           The latest region-size is not updated in the models.         \n"
   "                                                                        \n"
+  "      -p,  --show-parameters                                            \n"
+  "           show parameters of the models for optimization.              \n"
+  "                                                                        \n"
   "      -s,  --show-levels                                                \n"
   "           show pre-computed compression levels (configured parameters).\n"
   "                                                                        \n",
@@ -112,11 +116,8 @@ void PrintMenuCompression(void){
   "           Compression level (integer).                                 \n"
   "           Default level: %u.                                           \n"
   "           It defines compressibility in balance with computational     \n"
-  "           resources (RAM & time). Use -s for levels perception.        \n"
-  "                                                                        \n",
+  "           resources (RAM & time). Use -s for levels perception.        \n",
   DEFAULT_LEVEL);
-
-  ModelsExplanation();
 
   fprintf(stderr,
   "                                                                        \n"

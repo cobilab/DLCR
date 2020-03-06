@@ -69,27 +69,11 @@ Threads;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#define BITS_WATERMARK         32
-#define BITS_CHECKSUM          46
-#define BITS_SIZE              46
-#define BITS_N_MODELS          16
-
-#define BITS_TYPE              8
-#define BITS_CTX               8
-#define BITS_ALPHA_DEN         16
-#define BITS_IR                8
-#define BITS_GAMMA             32
-#define BITS_HASH              8
-#define BITS_EDITS             8
-#define BITS_E_ALPHA_DEN       16
-#define BITS_E_GAMMA           32
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 #define BUFFER_SIZE            262144
 #define PROGRESS_MIN           1000000
 #define DEF_VERSION            0
 #define DEF_EXAMPLE            0
+#define DEFAULT_PARAM          0
 #define DEFAULT_HELP           0
 #define DEFAULT_VERBOSE        0
 #define DEFAULT_FORCE          0
