@@ -14,14 +14,14 @@
 #include "pmodels.h"
 #include "context.h"
 
-Parameters *P // FOR THREAD SHARING
+Parameters *P; // FOR THREAD SHARING
 
 //////////////////////////////////////////////////////////////////////////////
 // - - - - - - - - - - - - - - C O M P R E S S O R - - - - - - - - - - - - - -
 
 void Compress(uint8_t id){
-  FILE        *Reader  = Fopen(P->tar[id], "r");
-  char        *name    = concatenate(P->tar[id], ".co");
+  FILE        *Reader  = Fopen("forward", "r");
+  char        *name    = concatenate("forward", ".co");
   FILE        *Writter = Fopen(name, "w");
   uint32_t    n, k, cModel, totModels, idxPos;
   uint64_t    compressed = 0, nSymbols = 0, nBases = 0;
@@ -30,7 +30,7 @@ void Compress(uint8_t id){
   FloatPModel *PT;
   CMWeight    *WM;
   CBUF        *symbBUF;
-  CModel      **cModels
+  CModel      **cModels;
   uint64_t    i = 0;
 
   if(P->verbose)
@@ -177,6 +177,7 @@ int32_t main(int argc, char *argv[]){
   clock_t     stop = 0, start = clock();
 
   P = (Parameters *) Malloc(1 * sizeof(Parameters));
+
   if((P->help = ArgsState(DEFAULT_HELP, p, argc, "-h", "--help")) == 1
   || argc < 2){
     PrintMenuCompression();
@@ -195,12 +196,10 @@ int32_t main(int argc, char *argv[]){
 
   P->force     = ArgsState  (DEFAULT_FORCE,   p, argc, "-F", "--force");
   P->verbose   = ArgsState  (DEFAULT_VERBOSE, p, argc, "-v", "--verbose");
-
   P->threshold = ArgsDouble (0, p, argc, "-t", "--threshold");
   P->window    = ArgsNum    (0, p, argc, "-w", "--window-size", 1, 999999999);
   P->region    = ArgsNum    (0, p, argc, "-r", "--region-size", 1, 999999999);
-
-  P->level    = ArgsNum    (0, p, argc, "-l", "--level", MIN_LEVEL, MAX_LEVEL);
+  P->level     = ArgsNum    (0, p, argc, "-l", "--level", MIN_LEVEL, MAX_LEVEL);
 
   P->nModels  = 0;
   for(n = 1 ; n < argc ; ++n)
@@ -238,7 +237,7 @@ int32_t main(int argc, char *argv[]){
   if(P->verbose)
     PrintArgs(P);
 
-
+  Compress(1);
 
   stop = clock();
   fprintf(stdout, "Spent %g sec.\n", ((double)(stop-start))/CLOCKS_PER_SEC);

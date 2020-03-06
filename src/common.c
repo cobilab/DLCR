@@ -537,28 +537,6 @@ int32_t StrToArgv(char *s, char ***v){
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-uint32_t ReadFNames(Parameters *P, char *arg)
-  {
-  uint32_t nFiles = 1, k = 0, argLen;
-
-  argLen = strlen(arg);
-  for( ; k != argLen ; ++k)
-    if(arg[k] == ':')
-      ++nFiles;
-  P->tar = (char **) Malloc(nFiles * sizeof(char *));
-  P->tar[0] = strtok(arg, ":");
-  TestReadFile(P->tar[0]);
-  for(k = 1 ; k != nFiles ; ++k)
-    {
-    P->tar[k] = strtok(NULL, ":");
-    TestReadFile(P->tar[k]);
-    }
-
-  return nFiles;
-  }
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 void CalcProgress(uint64_t size, uint64_t i)
   {
   if(i % (size / 100) == 0 && size > PROGRESS_MIN)
@@ -589,82 +567,39 @@ void PrintArgs(Parameters *P)
 
   fprintf(stderr, "Force mode ......................... %s\n", P->force == 0 ?
   "no" : "yes");
-
-  for(n = 0 ; n < P->nModels ; ++n)
-    if(P->model[n].type == 1)
-      {
-      fprintf(stderr, "Reference model %d:\n", n+1);
-      fprintf(stderr, "  [+] Context order ................ %u\n",
-      P->model[n].ctx);
-      fprintf(stderr, "  [+] Alpha denominator ............ %u\n",
-      P->model[n].den);
-      switch(P->model[n].ir)
-        {
-        case 0:
-        fprintf(stderr, "  [+] Inverted repeats ............. no (only regular)\n");
-        break;
-        case 1:
-        fprintf(stderr, "  [+] Inverted repeats ............. mix (regular and inverted)\n");
-        break;
-        case 2:
-        fprintf(stderr, "  [+] Inverted repeats ............. inverted only\n");
-        break;
-        }
-      fprintf(stderr, "  [+] Cache-hash size .............. %u\n",
-      P->model[n].hashSize);
-      fprintf(stderr, "  [+] Gamma ........................ %.3lf\n",
-      P->model[n].gamma);
-      fprintf(stderr, "  [+] Allowable substitutions ...... %u\n",
-      P->model[n].edits);
-      if(P->model[n].edits != 0){
-        fprintf(stderr, "  [+] Substitutions alpha den ...... %u\n",
-        P->model[n].eDen);
-        fprintf(stderr, "  [+] Substitutions gamma .......... %.3lf\n",
-        P->model[n].eGamma);
-        }
+  fprintf(stderr, "Threshold .......................... %.3lf\n", P->threshold);
+  fprintf(stderr, "Window size ........................ %"PRIu64"\n", P->window);
+  fprintf(stderr, "Region size ........................ %"PRIu64"\n", P->region);
+  for(n = 0 ; n < P->nModels ; ++n){
+    fprintf(stderr, "Target model %d:\n", n+1);
+    fprintf(stderr, "  [+] Context order ................ %u\n",
+    P->model[n].ctx);
+    fprintf(stderr, "  [+] Alpha denominator ............ %u\n",
+    P->model[n].den);
+    switch(P->model[n].ir){
+      case 0:
+      fprintf(stderr, "  [+] Inverted repeats ............. no (only regular)\n");
+      break;
+      case 1:
+      fprintf(stderr, "  [+] Inverted repeats ............. mix (regular and inverted)\n");
+      break;
+      case 2:
+      fprintf(stderr, "  [+] Inverted repeats ............. inverted only\n");
+      break;
       }
-
-  for(n = 0 ; n < P->nModels ; ++n)
-    if(P->model[n].type == 0)
-      {
-      fprintf(stderr, "Target model %d:\n", n+1);
-      fprintf(stderr, "  [+] Context order ................ %u\n",
-      P->model[n].ctx);
-      fprintf(stderr, "  [+] Alpha denominator ............ %u\n",
-      P->model[n].den);
-      switch(P->model[n].ir)
-        {
-        case 0:
-        fprintf(stderr, "  [+] Inverted repeats ............. no (only regular)\n");
-        break;
-        case 1:
-        fprintf(stderr, "  [+] Inverted repeats ............. mix (regular and inverted)\n");
-        break;
-        case 2:
-        fprintf(stderr, "  [+] Inverted repeats ............. inverted only\n");
-        break;
-        }
-      fprintf(stderr, "  [+] Cache-hash size .............. %u\n",
-      P->model[n].hashSize);
-      fprintf(stderr, "  [+] Gamma ........................ %.3lf\n",
-      P->model[n].gamma);
-      fprintf(stderr, "  [+] Allowable substitutions ...... %u\n",
-      P->model[n].edits);
-      if(P->model[n].edits != 0)
-        {
-        fprintf(stderr, "  [+] Substitutions alpha den ...... %u\n",
-        P->model[n].eDen);
-        fprintf(stderr, "  [+] Substitutions gamma .......... %.3lf\n",
-        P->model[n].eGamma);
-        }
+    fprintf(stderr, "  [+] Cache-hash size .............. %u\n",
+    P->model[n].hashSize);
+    fprintf(stderr, "  [+] Gamma ........................ %.3lf\n",
+    P->model[n].gamma);
+    fprintf(stderr, "  [+] Allowable substitutions ...... %u\n",
+    P->model[n].edits);
+    if(P->model[n].edits != 0){
+      fprintf(stderr, "  [+] Substitutions alpha den ...... %u\n",
+      P->model[n].eDen);
+      fprintf(stderr, "  [+] Substitutions gamma .......... %.3lf\n",
+      P->model[n].eGamma);
       }
-
-  if(P->ref != NULL)
-    fprintf(stderr, "Reference filename ................. %s\n", P->ref);
-  fprintf(stderr, "Target files (%u):\n", P->nTar);
-  for(n = 0 ; n < P->nTar ; ++n)
-    fprintf(stderr, "  [+] Filename %-2u .................. %s\n", n + 1,
-    P->tar[n]);
+    }
   }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
