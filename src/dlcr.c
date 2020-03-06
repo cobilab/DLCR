@@ -60,21 +60,22 @@ void CompressTarget(Threads T){
   FILE        *Writter = Fopen(out_name, "w");
 
   uint32_t    n, k, cModel, totModels, idxPos;
-  uint64_t    compressed = 0, nSymbols = 0, nBases = 0;
+  uint64_t    compressed = 0, nSymbols = 0, nBases = 0, i = 0;
   uint8_t     *readBUF, sym, irSym, *pos;
   PModel      **pModel, *MX;
   FloatPModel *PT;
   CMWeight    *WM;
   CBUF        *symbBUF;
   CModel      **cModels;
-  uint64_t    i = 0;
-
+  CACHE       *C;
+  
   // EXTRA MODELS DERIVED FROM EDITS
   totModels = P->nModels;
   for(n = 0 ; n < P->nModels ; ++n)
     if(P->model[n].edits != 0)
       totModels += 1;
 
+  C             = CreateCache(P->region, P->nModels); 
   pModel        = (PModel  **) Calloc(totModels, sizeof(PModel *));
   for(n = 0 ; n < totModels ; ++n)
     pModel[n]   = CreatePModel      (ALPHABET_SIZE);
@@ -95,9 +96,8 @@ void CompressTarget(Threads T){
   int pIdx = 0;
   for(n = 0 ; n < P->nModels ; ++n){
     WM->gamma[pIdx++] = cModels[n]->gamma;
-    if(P->model[n].edits != 0){
+    if(P->model[n].edits != 0)
       WM->gamma[pIdx++] = cModels[n]->SUBS.eGamma;
-      }
     }
 
   while((k = fread(readBUF, 1, BUFFER_SIZE, Reader)))
@@ -108,6 +108,7 @@ void CompressTarget(Threads T){
       // FINAL FILTERING DNA CONTENT
       if(sym != 'A' && sym != 'C' && sym != 'G' && sym != 'T'){
         fprintf(Writter, "2\n"); // FORCE HIGH COMPLEXITY <- UNKNOWN SYMBOL
+	++compressed;
         continue;
         }
 
@@ -137,6 +138,52 @@ void CompressTarget(Threads T){
       CalcDecayment(WM, pModel, sym);
 
       for(n = 0 ; n < P->nModels ; ++n){
+	switch(cModels[n]->ir){
+          case 0:
+          C->E[C->pos].M[n].idx    = cModels[n]->pModelIdx;
+          C->E[C->pos].M[n].s      = sym;
+	  break;
+	  case 1:
+          C->E[C->pos].M[n].idx    = cModels[n]->pModelIdx;
+          C->E[C->pos].M[n].s      = sym;
+	  C->E[C->pos].M[n].idx_ir = cModels[n]->pModelIdxIR;
+          C->E[C->pos].M[n].s_ir   = irSym;
+	  break;
+	  case 2:
+          C->E[C->pos].M[n].idx_ir = cModels[n]->pModelIdxIR;
+          C->E[C->pos].M[n].s_ir   = irSym;
+	  break;
+	  default: 
+	  fprintf(stderr, "ERROR: no store action!\n");
+	  exit(1);
+	  }
+        }
+
+      if(compressed >= C->size - 2){
+        for(n = 0 ; n < P->nModels ; ++n){
+          uint32_t pos = (C->pos == 0) ? C->size - 1 : C->pos - 1;
+          switch(cModels[n]->ir){
+            case 0:
+            UpdateCModelCounter(cModels[n], C->E[pos].M[n].s, C->E[pos].M[n].idx);
+            break;
+            case 1:
+            UpdateCModelCounter(cModels[n], C->E[pos].M[n].s, C->E[pos].M[n].idx);
+            UpdateCModelCounter(cModels[n], C->E[pos].M[n].s_ir, C->E[pos].M[n].idx_ir);
+            break;
+            case 2:
+            UpdateCModelCounter(cModels[n], C->E[pos].M[n].s_ir, C->E[pos].M[n].idx_ir);
+            break;
+            default:
+            fprintf(stderr, "ERROR: no update action!\n");
+	    exit(1);
+            }
+          }
+        }
+
+      UpdateCache(C);
+
+/*      
+      for(n = 0 ; n < P->nModels ; ++n){
         switch(cModels[n]->ir){
           case 0:
           UpdateCModelCounter(cModels[n], sym, cModels[n]->pModelIdx);
@@ -155,6 +202,7 @@ void CompressTarget(Threads T){
           break;
           }
         }
+*/
 
       RenormalizeWeights(WM);
 
@@ -175,6 +223,7 @@ void CompressTarget(Threads T){
   // for(n = 0 ; n < P->nModels ; ++n)
   //   FreeCModel(cModels[n]);
 
+  RemoveCache(C);
   for(n = 0 ; n < totModels ; ++n){
     Free(pModel[n]->freqs);
     Free(pModel[n]);

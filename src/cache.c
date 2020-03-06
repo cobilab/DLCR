@@ -4,30 +4,32 @@
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-CACHE *CreateCache(uint32_t size){
+CACHE *CreateCache(uint32_t size, uint32_t nModels){
 
-  CACHE *C     = (CACHE *) Calloc(1, sizeof(CACHE));
-  C->pos       = 0;
-  C->size      = size;
-  C->E         = (C_ENTRY *) Calloc(size, sizeof(C_ENTRY));
-  C->E->idx    = 0;
-  C->E->idx_ir = 0;
-  C->E->s      = 'A';
-  C->E->s_ir   = 'T';
+  uint32_t x, y;
+  CACHE *C        = (CACHE *) Calloc(1, sizeof(CACHE));
+  C->pos          = 0;
+  C->size         = size;
+  C->E            = (MODELS_E *) Calloc(C->size + 1, sizeof(MODELS_E));
+  for(x = 0 ; x < C->size ; ++x){
+    C->E[x].nModels = nModels;
+    C->E[x].M       = (C_ENTRY *) Calloc(C->E[x].nModels + 1, sizeof(C_ENTRY));
+    for(y = 0 ; y < C->E[x].nModels ; ++y){
+      C->E[x].M[y].idx    = 0;
+      C->E[x].M[y].idx_ir = 0;
+      C->E[x].M[y].s      = 'A';
+      C->E[x].M[y].s_ir   = 'T';
+      }
+    }
 
   return C;
   }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-void UpdateCache(CACHE *C, uint64_t i, uint64_t i_ir, uint8_t s, uint8_t s_ir){
+void UpdateCache(CACHE *C){
 
-  C->E[C->pos].idx = i;
-  C->E[C->pos].idx_ir = i_ir;
-  C->E[C->pos].s = s;
-  C->E[C->pos].s_ir = s_ir;
-
-  if(C->pos == C->size - 1) 
+  if(C->pos == C->size - 1)
     C->pos = 0;
   else
     C->pos++;
@@ -39,6 +41,9 @@ void UpdateCache(CACHE *C, uint64_t i, uint64_t i_ir, uint8_t s, uint8_t s_ir){
 
 void RemoveCache(CACHE *C){
 
+  uint32_t x;
+  for(x = 0 ; x < C->E->nModels ; ++x)
+    Free(C->E[x].M); 
   Free(C->E);
   Free(C);
 

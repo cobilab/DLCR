@@ -49,7 +49,7 @@ typedef struct{
   U8       level;
   double   threshold;
   double   weight;
-  U64      region;
+  U32      region;
   ModelPar *model;
   U64      size;
   U64      ignore;
@@ -78,7 +78,7 @@ Threads;
 #define DEFAULT_HELP           0
 #define DEFAULT_VERBOSE        0
 #define DEFAULT_FORCE          0
-#define DEFAULT_LEVEL          5
+#define DEFAULT_LEVEL          4
 #define MAX_LEVEL              15
 #define MIN_LEVEL              1
 #define MAX_CTX                31

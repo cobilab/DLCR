@@ -14,7 +14,13 @@ typedef struct{
 C_ENTRY;
 
 typedef struct{
-  C_ENTRY  *E;
+  C_ENTRY  *M;
+  uint32_t nModels;
+  }
+MODELS_E;
+
+typedef struct{
+  MODELS_E *E;
   uint32_t size;
   uint32_t pos;
   }
@@ -22,8 +28,8 @@ CACHE;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-CACHE *CreateCache (uint32_t);
-void  UpdateCache  (CACHE *, uint64_t, uint64_t, uint8_t, uint8_t);
+CACHE *CreateCache (uint32_t, uint32_t);
+void  UpdateCache  (CACHE *);
 void  RemoveCache  (CACHE *);
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
