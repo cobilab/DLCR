@@ -169,14 +169,12 @@ void CompressTarget(Threads T){
 
   fclose(Writter);
   Free(MX);
-
-  /*
-  for(n = 0 ; n < P->nModels ; ++n)
-    if(P->model[n].type == REFERENCE)
-      ResetCModelIdx(cModels[n]);
-    else
-      FreeCModel(cModels[n]);
-      */
+  
+  // for(n = 0 ; n < P->nModels ; ++n)
+  //   if(P->model[n].type == REFERENCE)
+  //     ResetCModelIdx(cModels[n]);
+  //   else
+  //     FreeCModel(cModels[n]);
 
   for(n = 0 ; n < totModels ; ++n){
     Free(pModel[n]->freqs);
@@ -408,16 +406,11 @@ int32_t main(int argc, char *argv[]){
   
   if(P->verbose) fprintf(stderr, "Done!\n");
 
-  // DISPLAYING ===============================================================
-  //
-
-  // TODO:
-
   // FINALIZING ===============================================================
   //
 
   stop = clock();
-  fprintf(stdout, "Spent %g sec.\n", ((double)(stop-start))/CLOCKS_PER_SEC);
+  fprintf(stderr, "Spent %g sec.\n", ((double) (stop-start)) / CLOCKS_PER_SEC);
 
   return EXIT_SUCCESS;
   }
