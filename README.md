@@ -2,7 +2,7 @@
 
 <b>DLCR: efficient detection of Distant Low Complexity Regions</b>
 
-## Installation ##
+### Installation ###
 
 Cmake is needed for installation (http://www.cmake.org/). The download is directly available from http://www.cmake.org/cmake/ or by
 <pre>
@@ -17,13 +17,13 @@ cmake .
 make
 </pre>
 
-## Running the program ##
+### Running DLCR ###
 
 <pre>
 ./DLCR -v -t 1 -l 4 -i 10 bacteria.fa
 </pre>
 
-## Parameters ##
+### Parameters ###
 
 <pre>
                                                                         
@@ -92,11 +92,11 @@ COPYRIGHT
       is NOT ANY WARRANTY, to the extent permitted by law. 
 </pre>
 
-## Issues ##
+### Issues ###
 
 For any issue let us know at [issues link](https://github.com/cobilab/DLCR/issues).
 
-## LICENSE ##
+### License ###
 
 GPL v3.
 
