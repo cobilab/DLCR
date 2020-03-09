@@ -100,6 +100,7 @@ void CompressTarget(Threads T){
       WM->gamma[pIdx++] = cModels[n]->SUBS.eGamma;
     }
 
+  compressed = 0;
   while((k = fread(readBUF, 1, BUFFER_SIZE, Reader)))
     for(idxPos = 0 ; idxPos < k ; ++idxPos){
 
@@ -108,7 +109,6 @@ void CompressTarget(Threads T){
       // FINAL FILTERING DNA CONTENT
       if(sym != 'A' && sym != 'C' && sym != 'G' && sym != 'T'){
         fprintf(Writter, "2\n"); // FORCE HIGH COMPLEXITY <- UNKNOWN SYMBOL
-	++compressed;
         continue;
         }
 
@@ -137,73 +137,80 @@ void CompressTarget(Threads T){
       fprintf(Writter, "%.3g\n", PModelSymbolNats(MX, sym) / M_LN2);
       CalcDecayment(WM, pModel, sym);
 
-      for(n = 0 ; n < P->nModels ; ++n){
-	switch(cModels[n]->ir){
-          case 0:
-          C->E[C->pos].M[n].idx    = cModels[n]->pModelIdx;
-          C->E[C->pos].M[n].s      = sym;
-	  break;
-	  case 1:
-          C->E[C->pos].M[n].idx    = cModels[n]->pModelIdx;
-          C->E[C->pos].M[n].s      = sym;
-	  C->E[C->pos].M[n].idx_ir = cModels[n]->pModelIdxIR;
-          C->E[C->pos].M[n].s_ir   = irSym;
-	  break;
-	  case 2:
-          C->E[C->pos].M[n].idx_ir = cModels[n]->pModelIdxIR;
-          C->E[C->pos].M[n].s_ir   = irSym;
-	  break;
-	  default: 
-	  fprintf(stderr, "ERROR: no store action!\n");
-	  exit(1);
-	  }
-        }
+      if(C->size != 0){
 
-      if(compressed >= C->size - 2){
         for(n = 0 ; n < P->nModels ; ++n){
-          uint32_t pos = (C->pos == 0) ? C->size - 1 : C->pos - 1;
-          switch(cModels[n]->ir){
+	  switch(cModels[n]->ir){
             case 0:
-            UpdateCModelCounter(cModels[n], C->E[pos].M[n].s, C->E[pos].M[n].idx);
+            C->E[C->pos].M[n].idx    = cModels[n]->pModelIdx;
+            C->E[C->pos].M[n].s      = sym;
             break;
-            case 1:
-            UpdateCModelCounter(cModels[n], C->E[pos].M[n].s, C->E[pos].M[n].idx);
-            UpdateCModelCounter(cModels[n], C->E[pos].M[n].s_ir, C->E[pos].M[n].idx_ir);
-            break;
-            case 2:
-            UpdateCModelCounter(cModels[n], C->E[pos].M[n].s_ir, C->E[pos].M[n].idx_ir);
-            break;
-            default:
-            fprintf(stderr, "ERROR: no update action!\n");
+	    case 1:
+            C->E[C->pos].M[n].idx    = cModels[n]->pModelIdx;
+            C->E[C->pos].M[n].s      = sym;
+	    C->E[C->pos].M[n].idx_ir = cModels[n]->pModelIdxIR;
+            C->E[C->pos].M[n].s_ir   = irSym;
+	    break;
+	    case 2:
+            C->E[C->pos].M[n].idx_ir = cModels[n]->pModelIdxIR;
+            C->E[C->pos].M[n].s_ir   = irSym;
+	    break;
+	    default: 
+	    fprintf(stderr, "ERROR: no store action!\n");
 	    exit(1);
+	    }
+          }
+
+        if(compressed >= C->size - 1){
+          for(n = 0 ; n < P->nModels ; ++n){
+            uint32_t pos = (C->pos + 1) % C->size;
+            switch(cModels[n]->ir){
+              case 0:
+              UpdateCModelCounter(cModels[n], C->E[pos].M[n].s, 
+			          C->E[pos].M[n].idx);
+              break;
+              case 1:
+              UpdateCModelCounter(cModels[n], C->E[pos].M[n].s, 
+			          C->E[pos].M[n].idx);
+              UpdateCModelCounter(cModels[n], C->E[pos].M[n].s_ir, 
+			          C->E[pos].M[n].idx_ir);
+              break;
+              case 2:
+              UpdateCModelCounter(cModels[n], C->E[pos].M[n].s_ir, 
+			          C->E[pos].M[n].idx_ir);
+              break;
+              default:
+              fprintf(stderr, "ERROR: no update action!\n");
+              exit(1);
+              }
             }
           }
         }
+      else{
+
+        for(n = 0 ; n < P->nModels ; ++n){
+          switch(cModels[n]->ir){
+            case 0:
+            UpdateCModelCounter(cModels[n], sym, cModels[n]->pModelIdx);
+            break;
+            case 1:
+            UpdateCModelCounter(cModels[n], sym, cModels[n]->pModelIdx);
+            irSym = GetPModelIdxIR(symbBUF->buf+symbBUF->idx, cModels[n]);
+            UpdateCModelCounter(cModels[n], irSym, cModels[n]->pModelIdxIR);
+            break;
+            case 2:
+            irSym = GetPModelIdxIR(symbBUF->buf+symbBUF->idx, cModels[n]);
+            UpdateCModelCounter(cModels[n], irSym, cModels[n]->pModelIdxIR);
+            break;
+            default:
+            UpdateCModelCounter(cModels[n], sym, cModels[n]->pModelIdx);
+            break;
+            }
+          }
+        }	
 
       UpdateCache(C);
-
-/*      
-      for(n = 0 ; n < P->nModels ; ++n){
-        switch(cModels[n]->ir){
-          case 0:
-          UpdateCModelCounter(cModels[n], sym, cModels[n]->pModelIdx);
-          break;
-          case 1:
-          UpdateCModelCounter(cModels[n], sym, cModels[n]->pModelIdx);
-          irSym = GetPModelIdxIR(symbBUF->buf+symbBUF->idx, cModels[n]);
-          UpdateCModelCounter(cModels[n], irSym, cModels[n]->pModelIdxIR);
-          break;
-          case 2:
-          irSym = GetPModelIdxIR(symbBUF->buf+symbBUF->idx, cModels[n]);
-          UpdateCModelCounter(cModels[n], irSym, cModels[n]->pModelIdxIR);
-          break;
-          default:
-          UpdateCModelCounter(cModels[n], sym, cModels[n]->pModelIdx);
-          break;
-          }
-        }
-*/
-
+  
       RenormalizeWeights(WM);
 
       n = 0;

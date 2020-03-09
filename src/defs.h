@@ -75,6 +75,7 @@ Threads;
 #define DEF_VERSION            0
 #define DEF_EXAMPLE            0
 #define DEFAULT_PARAM          0
+#define DEFAULT_REGION         1
 #define DEFAULT_HELP           0
 #define DEFAULT_VERBOSE        0
 #define DEFAULT_FORCE          0
