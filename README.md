@@ -31,8 +31,7 @@ make
       ===========================================================       
                                                                         
 AUTHORS                                                                 
-      Diogo Pratas      (pratas@ua.pt),                                 
-      Tiago Oliveira    (tiagomanuel28@gmail.com)                       
+      Tiago Oliveira (tiagomanuel28@gmail.com) and D. Pratas                     
                                                                         
 SYNOPSIS                                                                
       ./DLCR [OPTION]... [FILE]                                         
