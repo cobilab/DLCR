@@ -4,7 +4,8 @@
 
 ### Installation ###
 
-Cmake is needed for installation (http://www.cmake.org/). The download is directly available from http://www.cmake.org/cmake/ or by
+Cmake is needed for installation (http://www.cmake.org/).<br>
+The download is directly available from the cmake website or by
 <pre>
 sudo apt-get install cmake git
 </pre>
