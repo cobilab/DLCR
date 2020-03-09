@@ -11,7 +11,7 @@ sudo apt-get install cmake git
 
 Then, to install DLCR use:
 <pre>
-git clone https://github.com/pratas/DLCR.git
+git clone https://github.com/cobilab/DLCR.git
 cd DLCR/src/
 cmake .
 make
@@ -25,7 +25,7 @@ make
 
 ## Issues ##
 
-For any issue let us know at [issues link](https://github.com/pratas/DLCR/issues).
+For any issue let us know at [issues link](https://github.com/cobilab/DLCR/issues).
 
 ## LICENSE ##
 
