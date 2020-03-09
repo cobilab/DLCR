@@ -1,14 +1,15 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 
-<br>DLCR: localization and quantification of Distant Low Complexity Regions</b>
+<b>DLCR: localization and quantification of Distant Low Complexity Regions</b>
 
-## INSTALLATION ##
+## Installation ##
 
 Cmake is needed for installation (http://www.cmake.org/). You can download it directly from http://www.cmake.org/cmake/resources/software.html or use an appropriate packet manager, such as:
 <pre>
 sudo apt-get install cmake git
 </pre>
 
+Then, to install DLCR use:
 <pre>
 git clone https://github.com/pratas/DLCR.git
 cd DLCR/src/
@@ -16,7 +17,7 @@ cmake .
 make
 </pre>
 
-## Running the program
+## Running the program ##
 
 <pre>
 ./DLCR -v -t 1 -l 4 -i 10 bacteria.fa
