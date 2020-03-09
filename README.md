@@ -4,12 +4,12 @@
 
 ## Installation ##
 
-Cmake is needed for installation (http://www.cmake.org/). You can download it directly from http://www.cmake.org/cmake/resources/software.html or use an appropriate packet manager, such as:
+Cmake is needed for installation (http://www.cmake.org/). The download is directly available from http://www.cmake.org/cmake/ or by
 <pre>
 sudo apt-get install cmake git
 </pre>
 
-Then, to install DLCR use:
+For installing DLCR use:
 <pre>
 git clone https://github.com/cobilab/DLCR.git
 cd DLCR/src/
