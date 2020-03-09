@@ -1,6 +1,6 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 
-<img src="imgs/logo.png" alt="DLCR" height="20" border="0"/><b>Efficient detection of Distant Low Complexity Regions</b>
+<img src="imgs/logo.png" alt="DLCR" height="28" border="0"/><b><br>Efficient detection of Distant Low Complexity Regions</b>
 
 ### Installation ###
 
